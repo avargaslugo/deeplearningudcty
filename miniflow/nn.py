@@ -1,17 +1,32 @@
+"""
+This network feeds the output of a linear transform
+to the sigmoid function.
 
-from miniflow.miniflow import Input, Linear, topological_sort, forward_pass
+Finish implementing the Sigmoid class in miniflow.py!
 
-inputs, weights, bias = Input(), Input(), Input()
+Feel free to play around with this network, too!
+"""
 
-f = Linear(inputs, weights, bias)
+import numpy as np
+from miniflow import *
 
-feed_dict = {
-    inputs: [6, 14, 3],
-    weights: [0.5, 0.25, 1.4],
-    bias: 2
-}
+X, W, b = Input(), Input(), Input()
+
+f = Linear(X, W, b)
+g = Sigmoid(f)
+
+X_ = np.array([[-1., -2.], [-1, -2]])
+W_ = np.array([[2., -3], [2., -3]])
+b_ = np.array([-3., -5])
+
+feed_dict = {X: X_, W: W_, b: b_}
 
 graph = topological_sort(feed_dict)
-output = forward_pass(f, graph)
+output = forward_pass(g, graph)
 
-print(output) # should be 12.7 with this example
+"""
+Output should be:
+[[  1.23394576e-04   9.82013790e-01]
+ [  1.23394576e-04   9.82013790e-01]]
+"""
+print(output)

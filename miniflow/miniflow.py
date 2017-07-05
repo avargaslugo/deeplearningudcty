@@ -1,68 +1,81 @@
+"""
+Fix the Sigmoid class so that it computes the sigmoid function
+on the forward pass!
 
-class Node:
+Scroll down to get started.
+"""
+
+import numpy as np
+
+class Node(object):
     def __init__(self, inbound_nodes=[]):
-        # Nodes from which this Node receives values
         self.inbound_nodes = inbound_nodes
-        # Nodes to which this Node passes values
-        self.outbound_nodes = []
-        # A calculated value
         self.value = None
-        # Add this node as an outbound node on its inputs.
-        for n in self.inbound_nodes:
-            n.outbound_nodes.append(self)
+        self.outbound_nodes = []
+        for node in inbound_nodes:
+            node.outbound_nodes.append(self)
 
-    # These will be implemented in a subclass.
-    def forward(self):
-        """
-        Forward propagation.
-
-        Compute the output value based on `inbound_nodes` and
-        store the result in self.value.
-        """
-        raise NotImplemented
+    def forward():
+        raise NotImplementedError
 
 
 class Input(Node):
     def __init__(self):
-        # An Input Node has no inbound nodes,
+        # An Input node has no inbound nodes,
         # so no need to pass anything to the Node instantiator
         Node.__init__(self)
 
-        # NOTE: Input Node is the only Node where the value
-        # may be passed as an argument to forward().
-        #
-        # All other Node implementations should get the value
-        # of the previous nodes from self.inbound_nodes
-        #
-        # Example:
-        # val0 = self.inbound_nodes[0].value
-    def forward(self, value=None):
-        # Overwrite the value if one is passed in.
-        if value is not None:
-            self.value = value
+    def forward(self):
+        # Do nothing because nothing is calculated.
+        pass
 
 
 class Linear(Node):
-    def __init__(self, inputs, weights, bias):
-        Node.__init__(self, [inputs, weights, bias])
+    def __init__(self, X, W, b):
+        # Notice the ordering of the input nodes passed to the
+        # Node constructor.
+        Node.__init__(self, [X, W, b])
 
-        # NOTE: The weights and bias properties here are not
-        # numbers, but rather references to other nodes.
-        # The weight and bias values are stored within the
-        # respective nodes.
+    def forward(self):
+        X = self.inbound_nodes[0].value
+        W = self.inbound_nodes[1].value
+        b = self.inbound_nodes[2].value
+        self.value = np.dot(X, W) + b
+
+
+class Sigmoid(Node):
+    """
+    You need to fix the `_sigmoid` and `forward` methods.
+    """
+    def __init__(self, node):
+        Node.__init__(self, [node])
+
+    def _sigmoid(self, x):
+        """
+        This method is separate from `forward` because it
+        will be used later with `backward` as well.
+
+        `x`: A numpy array-like object.
+
+        Return the result of the sigmoid function.
+
+        Your code here!
+        """
+        return 1/ (1 + np.exp(-x))
+
 
     def forward(self):
         """
-        Set self.value to the value of the linear function output.
+        Set the value of this node to the result of the
+        sigmoid function, `_sigmoid`.
 
-        Your code goes here!
+        Your code here!
         """
-        inputs = [n.value for n in self.inbound_nodes[0]]
-        weights = [n.value for n in self.inbound_nodes[1]]
-        bias = [n.value for n in self.inbound_nodes[2]]
-        assert len(inputs) == len(weights)
-        self.value = inputs *  weights + bias
-
+        # This is a dummy value to prevent numpy errors
+        # if you test without changing this method.
+        self.inbound_nodes[0].forward()
+        x = self.inbound_nodes[0].value
+        self.value = self._sigmoid(x)
 
 
 def topological_sort(feed_dict):
@@ -109,14 +122,14 @@ def topological_sort(feed_dict):
 
 def forward_pass(output_node, sorted_nodes):
     """
-    Performs a forward pass through a list of sorted nodes.
+    Performs a forward pass through a list of sorted Nodes.
 
     Arguments:
 
-        `output_node`: A node in the graph, should be the output node (have no outgoing edges).
-        `sorted_nodes`: A topologically sorted list of nodes.
+        `output_node`: A Node in the graph, should be the output node (have no outgoing edges).
+        `sorted_nodes`: a topologically sorted list of nodes.
 
-    Returns the output Node's value
+    Returns the output node's value
     """
 
     for n in sorted_nodes:
